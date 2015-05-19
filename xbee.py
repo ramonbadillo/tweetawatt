@@ -39,7 +39,7 @@ class xbee(object):
                         self.rssi = p[3]
                         self.address_broadcast = ((p[4] >> 1) & 0x01) == 1
                         self.pan_broadcast = ((p[4] >> 2) & 0x01) == 1
-                       
+                        self.xbeeID = p[4] + p[4]
                         self.total_samples = p[5]
                         self.channel_indicator_high = p[6]
                         self.channel_indicator_low = p[7]

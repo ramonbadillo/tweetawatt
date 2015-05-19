@@ -7,11 +7,11 @@ import numpy as np
 import matplotlib
 matplotlib.use('WXAgg') # do this before importing pylab
 from pylab import *
-import appengineauth
-import twitter
+from apiElectro import apiElectro
 
-SERIALPORT = "COM4"    # the com/serial port the XBee is connected to
-BAUDRATE = 9600      # the baud rate we talk to the xbee
+
+
+
 CURRENTSENSE = 4       # which XBee ADC has current draw data
 VOLTSENSE = 0          # which XBee ADC has mains voltage data
 MAINSVPP = 170 * 2     # +-170V is what 120Vrms ends up being (= 120*2sqrt(2))
@@ -19,14 +19,12 @@ vrefs = [492, 492, 489, 492, 501, 493, 0, 0, 0] # approx ((2.4v * (10Ko/14.7Ko))
 
 CURRENTNORM = 15.5  # conversion to amperes from ADC
 NUMWATTDATASAMPLES = 1800 # how many samples to watch in the plot window, 1 hr @ 2s samples
-# Twitter username & password
-twitterusername = "username"
-twitterpassword = "password"
+
 
 
 # open up the FTDI serial port to get data transmitted to xbee
-ser = serial.Serial(SERIALPORT, BAUDRATE)
-ser.open()
+ser = serial.Serial(port='COM4', baudrate=9600)
+
 
 onlywatchfor = 0
 if (sys.argv and len(sys.argv) > 1):
@@ -36,8 +34,8 @@ print onlywatchfor
 # Create an animated graph
 fig = plt.figure()
 # with three subplots: line voltage/current, watts and watthr
-wattusage = fig.add_subplot(211)
-mainswatch = fig.add_subplot(212)
+wattusage = fig.add_subplot(411)
+mainswatch = fig.add_subplot(412)
 
 # data that we keep track of, the average watt usage as sent in
 avgwattdata = [0] * NUMWATTDATASAMPLES # zero out all the data to start
@@ -50,6 +48,7 @@ wattusage.set_ylabel('Watts')
 wattusage.set_ylim(0, 500)
 
 # the mains voltage and current level subplot
+twGadgets = [0,0,0,0,0]
 mains_t = np.arange(0, 18, 1)
 voltagewatchline, = mainswatch.plot(mains_t, [0] * 18, color='blue')
 mainswatch.set_ylabel('Volts')
@@ -66,17 +65,7 @@ legend((voltagewatchline, ampwatchline), ('volts', 'amps'))
 
 
 twittertimer = 0
-def TwitterIt(u, p, message):
-    api = twitter.Api(username=u, password=p)
-    print u, p
-    try:
-        status = api.PostUpdate(message)
-        print "%s just posted: %s" % (status.user.name, status.text)
-    except UnicodeDecodeError:
-        print "Your message could not be encoded.  Perhaps it contains non-ASCII characters? "
-        print "Try explicitly specifying the encoding with the  it with the --encoding flag"
-    except:
-        print "Couldn't connect, check network, username and password!"
+
     
 
 ####### store sensor data and array of histories per sensor
@@ -121,7 +110,7 @@ def update_graph(idleevent):
     packet = xbee.find_packet(ser)
     if packet:
         xb = xbee(packet)
-        print xb.address_16
+        #print xb.address_16
         if (onlywatchfor != 0):
             if (xb.address_16 != onlywatchfor):
                 return
@@ -180,6 +169,7 @@ def update_graph(idleevent):
         for i in range(len(wattdata)):
             wattdata[i] = voltagedata[i] * ampdata[i]
 
+
         # sum up the current drawn over one 1/60hz cycle
         avgamp = 0
         # 16.6 samples per second, one cycle = ~17 samples
@@ -197,8 +187,13 @@ def update_graph(idleevent):
 
 
         # Print out our most recent measurements
-        print str(xb.address_16)+"\tCurrent draw, in amperes: "+str(avgamp)
-        print "\tWatt draw, in VA: "+str(avgwatt)
+        #print xb.xbeeID
+
+        #print str(xb.address_16)+"\tCurrent draw, in amperes: "+str(avgamp)
+        #print "\tWatt draw, in VA: "+str(avgwatt)
+
+        ##print api = apiElectro("http://electrotecnia.herokuapp.com/api/gadgets/"+str(xb.xbeeID)+"/","http://electrotecnia.herokuapp.com/api/devices/1/")
+        ##api.postElectroRegistry(avgwatt,avgamp,100)
 
         # Add the current watt usage to our graph history
         avgwattdata[avgwattdataidx] = avgwatt
@@ -221,8 +216,14 @@ def update_graph(idleevent):
         elapsedseconds = time.time() - sensorhistory.lasttime
         dwatthr = (avgwatt * elapsedseconds) / (60.0 * 60.0)  # 60 seconds in 60 minutes = 1 hr
         sensorhistory.lasttime = time.time()
-        print "\t\tWh used in last ",elapsedseconds," seconds: ",dwatthr
+        #print "\t\tWh used in last ",elapsedseconds," seconds: ",dwatthr
+        twGadgets[xb.address_16] += dwatthr
+        print "1: " , twGadgets[1] , " |2: " , twGadgets[2], " |3: " , twGadgets[3], " |4: " , twGadgets[4]
         sensorhistory.addwatthr(dwatthr)
+
+
+        
+
 
         # Determine the minute of the hour (ie 6:42 -> '42')
         currminute = (int(time.time())/60) % 10
@@ -230,10 +231,11 @@ def update_graph(idleevent):
         if (((time.time() - sensorhistory.fiveminutetimer) >= 60.0) and (currminute % 5 == 0)):
             # Print out debug data, Wh used in last 5 minutes
             avgwattsused = sensorhistory.avgwattover5min()
-            print time.strftime("%Y %m %d, %H:%M"),", ",sensorhistory.cumulativewatthr,"Wh = ",avgwattsused," W average"
-
+            #print time.strftime("%Y %m %d, %H:%M"),", ",sensorhistory.cumulativewatthr,"Wh = ",avgwattsused," W average"
+            
             # Also, send it to the app engine
-            appengineauth.sendreport(xb.address_16, avgwattsused)
+
+            #appengineauth.sendreport(xb.address_16, avgwattsused)
             
             # Reset our 5 minute timer
             sensorhistory.reset5mintimer()
@@ -250,7 +252,13 @@ def update_graph(idleevent):
         # Redraw our pretty picture
         fig.canvas.draw_idle()
         # Update with latest data
+
         wattusageline.set_ydata(avgwattdata)
+
+
+        
+
+
         voltagewatchline.set_ydata(voltagedata)
         ampwatchline.set_ydata(ampdata)
         # Update our graphing range so that we always see all the data
