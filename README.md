@@ -1,4 +1,4 @@
-# tweetatt for electrotecnia
+# Tweetatt for electrotecnia
 Fork from the tweet-a-watt project
 
 Aditional Features
