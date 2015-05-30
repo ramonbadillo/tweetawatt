@@ -1,19 +1,15 @@
 import json
 import urllib2
 
-watts = 100
-amp = 100
-volts = 100
-date = "2015-04-10T21:16:32Z"
-idGadget = "http://electrotecnia.herokuapp.com/api/gadgets/1/"
+
 idDev = "http://electrotecnia.herokuapp.com/api/devices/1/"
 data = {}
 
 data['watts'] = watts
 data['amp'] = amp
 data['volts'] = volts
-data['date'] = date
-data['idGadget'] = idGadget
+data['timeStampClient'] = date
+
 data['idDev'] = idDev
 
 
@@ -21,7 +17,7 @@ data['idDev'] = idDev
 #json_data = json.dumps(data)
 
 
-url = 'http://electrotecnia.herokuapp.com/api/registrys/'
+url = 'http://electrotecnia.herokuapp.com/api/records/'
 req = urllib2.Request(url)
 req.add_header('Content-Type','application/json')
 jdata = json.dumps(data)

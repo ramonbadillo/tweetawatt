@@ -189,11 +189,11 @@ def update_graph(idleevent):
         # Print out our most recent measurements
         #print xb.xbeeID
 
-        #print str(xb.address_16)+"\tCurrent draw, in amperes: "+str(avgamp)
-        #print "\tWatt draw, in VA: "+str(avgwatt)
-
-        ##print api = apiElectro("http://electrotecnia.herokuapp.com/api/gadgets/"+str(xb.xbeeID)+"/","http://electrotecnia.herokuapp.com/api/devices/1/")
-        ##api.postElectroRegistry(avgwatt,avgamp,100)
+        print str(xb.address_16)+"\tCurrent draw, in amperes: "+str(avgamp)
+        print "\tWatt draw, in VA: "+str(avgwatt)
+        print "hola"
+        api = apiElectro("http://electrotecnia.herokuapp.com/api/devices/1/","admin")
+        api.postElectroRegistry(avgwatt,avgamp,100,str(xb.xbeeID))
 
         # Add the current watt usage to our graph history
         avgwattdata[avgwattdataidx] = avgwatt
@@ -216,9 +216,9 @@ def update_graph(idleevent):
         elapsedseconds = time.time() - sensorhistory.lasttime
         dwatthr = (avgwatt * elapsedseconds) / (60.0 * 60.0)  # 60 seconds in 60 minutes = 1 hr
         sensorhistory.lasttime = time.time()
-        #print "\t\tWh used in last ",elapsedseconds," seconds: ",dwatthr
+        print "\t\tWh used in last ",elapsedseconds," seconds: ",dwatthr
         twGadgets[xb.address_16] += dwatthr
-        print "1: " , twGadgets[1] , " |2: " , twGadgets[2], " |3: " , twGadgets[3], " |4: " , twGadgets[4]
+        #print "1: " , twGadgets[1] , " |2: " , twGadgets[2], " |3: " , twGadgets[3], " |4: " , twGadgets[4]
         sensorhistory.addwatthr(dwatthr)
 
 
