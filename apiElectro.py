@@ -8,9 +8,9 @@ from time import gmtime, strftime
 #volts = 100
 #date = "2015-04-10T21:16:32Z"
 
-idDev = "http://electrotecnia.herokuapp.com/api/devices/1/"
+idDev = "http://electrotecnia.herokuapp.com/api/devices/"
 data = {}
-user = "http://electrotecnia.herokuapp.com/api/users/1/"
+user = "http://electrotecnia.herokuapp.com/api/users/2/"
 
 
 class apiElectro(object):
@@ -24,15 +24,16 @@ class apiElectro(object):
         self.idDev = idDev
         
         
-    def postElectroRegistry(self,watts,amp,volts,idKill):
+    def postElectroRegistry(self,watts,amp,volts,idKill,kwh,idDev):
         data['watts'] = watts
+        data['kwh'] = kwh
         data['amp'] = amp
         data['volts'] = volts
         data['idKill'] = idKill
         data['timeStampClient'] = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-        data['idDev'] = idDev
+        data['idDev'] = self.idDev + idDev + "/"
         data['user'] = user
-
+        #print self.idDev + idDev + "/"
         
         self.postTo('http://electrotecnia.herokuapp.com/api/records/',data)
     
