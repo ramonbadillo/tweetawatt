@@ -23,7 +23,7 @@ NUMWATTDATASAMPLES = 1800 # how many samples to watch in the plot window, 1 hr @
 
 
 # open up the FTDI serial port to get data transmitted to xbee
-ser = serial.Serial(port='COM4', baudrate=9600)
+ser = serial.Serial(port='COM3', baudrate=9600)
 
 
 onlywatchfor = 0
@@ -125,7 +125,7 @@ def update_graph(idleevent):
         # and store them in nice little arrays
         for i in range(len(voltagedata)):
             voltagedata[i] = xb.analog_samples[i+1][VOLTSENSE]
-            ampdata[i] = xb.analog_samples[i+1][CURRENTSENSE]
+            ampdata[i] = xb.analog_samples[i+1][CURRENTSENSE] 
 
         #print ampdata
         
@@ -133,6 +133,38 @@ def update_graph(idleevent):
         # to make the graph 'AC coupled' / signed
         min_v = 1024     # XBee ADC is 10 bits, so max value is 1023
         max_v = 0
+        
+
+        voltagedataPablo = voltagedata[:]
+        max_v_p = max(voltagedataPablo)
+        min_v_p = min(voltagedataPablo)
+        #print "maximo voltage " + str(max_v_p)
+        #print "mini voltage " + str(min_v_p)
+        valor_int_p = ((max_v_p - min_v_p) / 2) + min_v_p
+        #print "valor intp " + str(valor_int_p)
+        for i in range(len(voltagedataPablo)):
+            #print str(i) + "-------------" + str(i)
+            voltagedataPablo[i] = (voltagedataPablo[i] - valor_int_p) * 0.581
+            #print "voltage antes de elevar " + str(voltagedataPablo[i])
+            #voltagedataPablo[i] = voltagedataPablo[i]**(2)
+            #print "voltage despues de elevar " + str(voltagedataPablo[i])
+
+        corrientedataPablo = ampdata[:]
+        max_c_p = max(corrientedataPablo)
+        min_c_p = min(corrientedataPablo)
+        #print "maximo voltage " + str(max_v_p)
+        #print "mini voltage " + str(min_v_p)
+        valor_intCorriente_p = ((max_c_p - min_c_p) / 2) + min_c_p
+        #print "valor intp " + str(valor_int_p)
+        for i in range(len(corrientedataPablo)):
+            #print str(i) + "-------------" + str(i)
+            corrientedataPablo[i] = (corrientedataPablo[i] - valor_intCorriente_p) * 0.062
+            #print "voltage antes de elevar " + str(voltagedataPablo[i])
+            #voltagedataPablo[i] = voltagedataPablo[i]**(2)
+            #print "voltage despues de elevar " + str(voltagedataPablo[i])
+
+
+
         for i in range(len(voltagedata)):
             if (min_v > voltagedata[i]):
                 min_v = voltagedata[i]
@@ -169,31 +201,52 @@ def update_graph(idleevent):
         # calculate instant. watts, by multiplying V*I for each sample point
         wattdata = [0] * len(voltagedata)
         for i in range(len(wattdata)):
-            wattdata[i] = voltagedata[i] * ampdata[i]
+            wattdata[i] = voltagedataPablo[i] * corrientedataPablo[i]
+        # comentado por pablo    wattdata[i] = voltagedata[i] * ampdata[i]
 
         # sum up the current drawn over one 1/60hz cycle
         avgamp = 0
         # 16.6 samples per second, one cycle = ~17 samples
         # close enough for govt work :(
         for i in range(17):
-            avgamp += abs(ampdata[i])
+            #avgamp += abs(ampdata[i])
+            avgamp += corrientedataPablo[i]
         avgamp /= 17.0
 
         # sum up power drawn over one 1/60hz cycle
         avgwatt = 0
         # 16.6 samples per second, one cycle = ~17 samples
-        for i in range(17):         
-            avgwatt += abs(wattdata[i])
+        for i in range(17):
+            avgwatt += (wattdata[i])         
+        #comentado por pablo    avgwatt += abs(wattdata[i])
         avgwatt /= 17.0
 
-        voltaje = max(voltagedata)
+        voltaje = len(voltagedata)
+        print voltaje
+
+        
+
+        #avgvoltp = 0
+
+        #for i in range(17):
+        #    avgvoltp += (voltagedataPablo[i])
+        #print "sumatoria volt = " + str(avgvoltp)  
+
+        
+         
+        #avgvoltp /= 17.0
+        #avgvoltp = avgvoltp**(.5)
+        #print  "average voltage Pablo" + str(avgvoltp)
+
+
+
         # Print out our most recent measurements
         #print xb.xbeeID
         #print voltaje
-        if xb.address_16 is 1:
-            print str(xb.address_16)+"\tCurrent draw, in amperes: "+str(avgamp)
+        #if xb.address_16 is 1:
+        print str(xb.address_16)+"\tCurrent draw, in amperes: "+str(avgamp)
         
-            print "\tWatt draw, in VA: "+str(avgwatt)
+        print "\tWatt draw, in VA: "+str(avgwatt)
             #print voltagedata
         
         
@@ -223,8 +276,8 @@ def update_graph(idleevent):
         dwatthr = (avgwatt * elapsedseconds) / (60.0 * 60.0)  # 60 seconds in 60 minutes = 1 hr
         sensorhistory.lasttime = time.time()
 
-        api = apiElectro("http://electrotecnia.herokuapp.com/api/devices/","admin")
-        api.postElectroRegistry(avgwatt,avgamp,100,str(xb.address_16),"{0:.4f}".format(dwatthr),str(xb.address_16))
+        #api = apiElectro("http://electrotecnia.herokuapp.com/api/devices/","admin")
+        #api.postElectroRegistry(avgwatt,avgamp,100,str(xb.address_16),"{0:.4f}".format(dwatthr),str(xb.address_16))
 
         #print str(xb.address_16)+"   C: ","{0:.4f}".format(avgamp) + "   W: "+"{0:.4f}".format(avgwatt) +"   Wh: ","{0:.4f}".format(dwatthr) + "   V:",voltagedata
 
