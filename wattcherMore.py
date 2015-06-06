@@ -23,7 +23,7 @@ NUMWATTDATASAMPLES = 1800 # how many samples to watch in the plot window, 1 hr @
 
 
 # open up the FTDI serial port to get data transmitted to xbee
-ser = serial.Serial(port='COM3', baudrate=9600)
+ser = serial.Serial(port='COM4', baudrate=9600)
 
 
 onlywatchfor = 0
@@ -50,7 +50,7 @@ wattusage.set_ylabel('Watts')
 wattusage.set_ylim(0, 500)
 
 # the mains voltage and current level subplot
-twGadgets = [0,0,0,0,0]
+
 mains_t = np.arange(0, 18, 1)
 voltagewatchline, = mainswatch.plot(mains_t, [0] * 18, color='blue')
 mainswatch.set_ylabel('Volts')
@@ -77,12 +77,29 @@ class Fiveminutehistory:
       self.fiveminutetimer = time.time()  # track data over 5 minutes
       self.lasttime = time.time()
       self.cumulativewatthr = 0
+      self.cumulativeamp = 0
+      self.cumulaticevol = 0
+      self.cumulativewat = 0
+
+
       
   def addwatthr(self, deltawatthr):
       self.cumulativewatthr +=  float(deltawatthr)
 
+  def addamp(self, deltaamp):
+      self.cumulativeamp +=  float(deltaamp)
+
+  def addamp(self, deltavol):
+      self.cumulativevol +=  float(deltavol)
+
+  def addamp(self, deltawat):
+      self.cumulativewat +=  float(deltawat)
+
   def reset5mintimer(self):
       self.cumulativewatthr = 0
+      self.cumulativeamp = 0
+      self.cumulaticevol = 0
+      self.cumulativewat = 0
       self.fiveminutetimer = time.time()
 
   def avgwattover5min(self):
@@ -105,7 +122,7 @@ def findsensorhistory(sensornum):
     sensorhistories.append(history)
     return history
 
-def update_graph(idleevent):
+def update_graph():
     global avgwattdataidx, sensorhistories, twittertimer, onlywatchfor
      
     # grab one packet from the xbee, or timeout
@@ -116,7 +133,7 @@ def update_graph(idleevent):
         if (onlywatchfor != 0):
             if (xb.address_16 != onlywatchfor):
                 return
-            print xb
+            #print xb
         
         # we'll only store n-1 samples since the first one is usually messed up
         voltagedata = [-1] * (len(xb.analog_samples) - 1)
@@ -244,6 +261,7 @@ def update_graph(idleevent):
         #print xb.xbeeID
         #print voltaje
         #if xb.address_16 is 1:
+        
         print str(xb.address_16)+"\tCurrent draw, in amperes: "+str(avgamp)
         
         print "\tWatt draw, in VA: "+str(avgwatt)
@@ -283,8 +301,8 @@ def update_graph(idleevent):
 
 
         #print "\t\tWh used in last ",elapsedseconds," seconds: ",dwatthr
-        twGadgets[xb.address_16] += dwatthr
-        #print "1: " , twGadgets[1] , " |2: " , twGadgets[2], " |3: " , twGadgets[3], " |4: " , twGadgets[4]
+        
+        
         sensorhistory.addwatthr(dwatthr)
 
 
@@ -294,7 +312,7 @@ def update_graph(idleevent):
         # Determine the minute of the hour (ie 6:42 -> '42')
         currminute = (int(time.time())/60) % 10
         #currminute = datetime.datetime.now().second
-        print datetime.datetime.now().second
+        #print datetime.datetime.now().second
         # Figure out if its been five minutes since our last save
         #if (((time.time() - sensorhistory.fiveminutetimer) >= 60.0) and (currminute >= 15)):
         if (((time.time() - sensorhistory.fiveminutetimer) >= 60.0) and (currminute % 1 == 0)):
@@ -316,7 +334,7 @@ def update_graph(idleevent):
         # Determine the hour of the day (ie 6:42 -> '6')
         currhour = datetime.datetime.now().hour
         if (((time.time() - twittertimer) >= 3660.0) and (currhour % 8 == 0)):
-          print "twittertime!"
+          #print "twittertime!"
           twittertimer = time.time();
           TwitterIt(twitterusername, twitterpassword,
                     appengineauth.gettweetreport())
@@ -329,7 +347,7 @@ def update_graph(idleevent):
 
         
 
-
+        '''
         voltagewatchline.set_ydata(voltagedata)
         ampwatchline.set_ydata(ampdata)
         # Update our graphing range so that we always see all the data
@@ -338,8 +356,11 @@ def update_graph(idleevent):
         maxamp = max(maxamp, -minamp)
         mainsampwatcher.set_ylim(maxamp * -1.2, maxamp * 1.2)
         wattusage.set_ylim(0, max(avgwattdata) * 1.2)
+        '''
         
-timer = wx.Timer(wx.GetApp(), -1)
-timer.Start(500)        # run an in every 'n' milli-seconds
-wx.GetApp().Bind(wx.EVT_TIMER, update_graph)
-plt.show()
+#timer = wx.Timer(wx.GetApp(), -1)
+#timer.Start(500)        # run an in every 'n' milli-seconds
+while True:
+    update_graph()
+#wx.GetApp().Bind(wx.EVT_TIMER, update_graph)
+#plt.show()
