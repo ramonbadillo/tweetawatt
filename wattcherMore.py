@@ -2,16 +2,38 @@
 import serial, time, datetime, sys
 from xbee import xbee
 # for graphing stuff
-import wx
-import numpy as np
-import matplotlib
-matplotlib.use('WXAgg') # do this before importing pylab
-from pylab import *
+
+#import numpy as np
+
+#import api to Post to the server
 from apiElectro import apiElectro
 
+#for read the settings file
+import os
+import ConfigParser
+
+
+##### Read the settings file and assign to the variable
+configParser = ConfigParser.RawConfigParser()
+configFilePath = os.path.join(os.path.dirname(__file__), 'settings.cfg')
+configParser.read(configFilePath)
+
+urlWebApp = configParser.get("webAppSettings","urlWebApp")
+urlDevices  = urlWebApp + configParser.get("webAppSettings","urlDevices")
+urlRecords = urlWebApp + configParser.get("webAppSettings","urlRecords")
+
+
+username = configParser.get("userSettings","username")
+urlUser  = urlWebApp + configParser.get("userSettings","urlUser")
+
+portCOM = configParser.get("desktopAppSettings","port")
+baudrate  = configParser.get("desktopAppSettings","baudrate")
+timeToMeasure  = int(configParser.get("desktopAppSettings","timeToMeasure"))
 
 
 
+
+#
 CURRENTSENSE = 4       # which XBee ADC has current draw data
 VOLTSENSE = 0          # which XBee ADC has mains voltage data
 MAINSVPP = 170 * 2     # +-170V is what 120Vrms ends up being (= 120*2sqrt(2))
@@ -23,7 +45,7 @@ NUMWATTDATASAMPLES = 1800 # how many samples to watch in the plot window, 1 hr @
 
 
 # open up the FTDI serial port to get data transmitted to xbee
-ser = serial.Serial(port='COM4', baudrate=9600)
+ser = serial.Serial(port=portCOM, baudrate=int(baudrate))
 
 
 onlywatchfor = 0
@@ -32,43 +54,13 @@ if (sys.argv and len(sys.argv) > 1):
 print onlywatchfor
 
 
-
-# Create an animated graph
-fig = plt.figure()
-# with three subplots: line voltage/current, watts and watthr
-wattusage = fig.add_subplot(411)
-mainswatch = fig.add_subplot(412)
-
 # data that we keep track of, the average watt usage as sent in
 avgwattdata = [0] * NUMWATTDATASAMPLES # zero out all the data to start
 avgwattdataidx = 0 # which point in the array we're entering new data
 
-# The watt subplot
-watt_t = np.arange(0, len(avgwattdata), 1)
-wattusageline, = wattusage.plot(watt_t, avgwattdata)
-wattusage.set_ylabel('Watts')
-wattusage.set_ylim(0, 500)
-
-# the mains voltage and current level subplot
-
-mains_t = np.arange(0, 18, 1)
-voltagewatchline, = mainswatch.plot(mains_t, [0] * 18, color='blue')
-mainswatch.set_ylabel('Volts')
-mainswatch.set_xlabel('Sample #')
-mainswatch.set_ylim(-200, 200)
-# make a second axies for amp data
-mainsampwatcher = mainswatch.twinx()
-ampwatchline, = mainsampwatcher.plot(mains_t, [0] * 18, color='green')
-mainsampwatcher.set_ylabel('Amps')
-mainsampwatcher.set_ylim(-15, 15)
-
-# and a legend for both of them
-legend((voltagewatchline, ampwatchline), ('volts', 'amps'))
 
 
-twittertimer = 0
 
-    
 
 ####### store sensor data and array of histories per sensor
 class Fiveminutehistory:
@@ -78,33 +70,51 @@ class Fiveminutehistory:
       self.lasttime = time.time()
       self.cumulativewatthr = 0
       self.cumulativeamp = 0
-      self.cumulaticevol = 0
+      self.cumulativevol = 0
       self.cumulativewat = 0
+      self.ampN = 0
+      self.volN = 0
+      self.watN = 0
 
 
-      
+
   def addwatthr(self, deltawatthr):
       self.cumulativewatthr +=  float(deltawatthr)
 
   def addamp(self, deltaamp):
       self.cumulativeamp +=  float(deltaamp)
+      self.ampN += 1
 
-  def addamp(self, deltavol):
+  def addvol(self, deltavol):
       self.cumulativevol +=  float(deltavol)
+      self.volN += 1
 
-  def addamp(self, deltawat):
+  def addwat(self, deltawat):
       self.cumulativewat +=  float(deltawat)
+      self.watN += 1
 
   def reset5mintimer(self):
       self.cumulativewatthr = 0
       self.cumulativeamp = 0
       self.cumulaticevol = 0
       self.cumulativewat = 0
+      self.ampN = 0
+      self.volN = 0
+      self.watN = 0
+
       self.fiveminutetimer = time.time()
 
   def avgwattover5min(self):
-      return self.cumulativewatthr * (60.0*60.0 / (time.time() - self.fiveminutetimer))
-  
+      return self.cumulativewatthr * (60.0 / (time.time() - self.fiveminutetimer))
+  def avgamp(self):
+      return self.cumulativeamp/self.ampN
+  def avgvol(self):
+      return self.cumulativevol/self.volN
+  def avgwat(self):
+      return self.cumulativewat /self.watN
+
+
+
   def __str__(self):
       return "[ id#: %d, 5mintimer: %f, lasttime; %f, cumulativewatthr: %f ]" % (self.sensornum, self.fiveminutetimer, self.lasttime, self.cumulativewatthr)
 
@@ -122,9 +132,29 @@ def findsensorhistory(sensornum):
     sensorhistories.append(history)
     return history
 
+###### read the settings file and
+def getSettings():
+    configParser = ConfigParser.RawConfigParser()
+    configFilePath = os.path.join(os.path.dirname(__file__), 'settings.cfg')
+    configParser.read(configFilePath)
+
+    urlWebApp = configParser.get("webAppSettings","urlWebApp")
+    urlDevices  = configParser.get("webAppSettings","urlDevices")
+    urlRecords = configParser.get("webAppSettings","urlRecords")
+
+
+    username = configParser.get("userSettings","username")
+    urlUser  = configParser.get("userSettings","urlUser")
+
+    portCOM = configParser.get("desktopAppSettings","port")
+    baudrate  = configParser.get("desktopAppSettings","baudrate")
+    timeToMeasure  = configParser.get("desktopAppSettings","timeToMeasure")
+
+
 def update_graph():
     global avgwattdataidx, sensorhistories, twittertimer, onlywatchfor
-     
+
+
     # grab one packet from the xbee, or timeout
     packet = xbee.find_packet(ser)
     if packet:
@@ -134,7 +164,7 @@ def update_graph():
             if (xb.address_16 != onlywatchfor):
                 return
             #print xb
-        
+
         # we'll only store n-1 samples since the first one is usually messed up
         voltagedata = [-1] * (len(xb.analog_samples) - 1)
         ampdata = [-1] * (len(xb.analog_samples ) -1)
@@ -142,15 +172,15 @@ def update_graph():
         # and store them in nice little arrays
         for i in range(len(voltagedata)):
             voltagedata[i] = xb.analog_samples[i+1][VOLTSENSE]
-            ampdata[i] = xb.analog_samples[i+1][CURRENTSENSE] 
+            ampdata[i] = xb.analog_samples[i+1][CURRENTSENSE]
 
         #print ampdata
-        
+
         # get max and min voltage and normalize the curve to '0'
         # to make the graph 'AC coupled' / signed
         min_v = 1024     # XBee ADC is 10 bits, so max value is 1023
         max_v = 0
-        
+
 
         voltagedataPablo = voltagedata[:]
         max_v_p = max(voltagedataPablo)
@@ -234,40 +264,39 @@ def update_graph():
         avgwatt = 0
         # 16.6 samples per second, one cycle = ~17 samples
         for i in range(17):
-            avgwatt += (wattdata[i])         
+            avgwatt += (wattdata[i])
         #comentado por pablo    avgwatt += abs(wattdata[i])
         avgwatt /= 17.0
 
-        voltaje = len(voltagedata)
-        print voltaje
 
-        
 
-        #avgvoltp = 0
 
-        #for i in range(17):
-        #    avgvoltp += (voltagedataPablo[i])
-        #print "sumatoria volt = " + str(avgvoltp)  
+        '''
+        avgvoltp = 0
+        print avgv /= 17.0 , ""
+        for i in range(17):
+            avgvoltp += (voltagedataPablo[i])
+        #print "sumatoria volt = " + str(avgvoltp)
 
-        
-         
-        #avgvoltp /= 17.0
+
+
+        avgvoltp /= 17.0
         #avgvoltp = avgvoltp**(.5)
-        #print  "average voltage Pablo" + str(avgvoltp)
-
+        print  "average voltage Pablo" + str(avgvoltp)
+        '''
 
 
         # Print out our most recent measurements
         #print xb.xbeeID
         #print voltaje
         #if xb.address_16 is 1:
-        
-        print str(xb.address_16)+"\tCurrent draw, in amperes: "+str(avgamp)
-        
-        print "\tWatt draw, in VA: "+str(avgwatt)
+
+        #print str(xb.address_16)+"\tCurrent draw, in amperes: "+str(avgamp)
+
+        #print "\tWatt draw, in VA: "+str(avgwatt)
             #print voltagedata
-        
-        
+
+
 
         ##print api = apiElectro("http://electrotecnia.herokuapp.com/api/gadgets/"+str(xb.xbeeID)+"/","http://electrotecnia.herokuapp.com/api/devices/1/")
         ##api.postElectroRegistry(avgwatt,avgamp,100)
@@ -297,41 +326,50 @@ def update_graph():
         #api = apiElectro("http://electrotecnia.herokuapp.com/api/devices/","admin")
         #api.postElectroRegistry(avgwatt,avgamp,100,str(xb.address_16),"{0:.4f}".format(dwatthr),str(xb.address_16))
 
-        #print str(xb.address_16)+"   C: ","{0:.4f}".format(avgamp) + "   W: "+"{0:.4f}".format(avgwatt) +"   Wh: ","{0:.4f}".format(dwatthr) + "   V:",voltagedata
+
 
 
         #print "\t\tWh used in last ",elapsedseconds," seconds: ",dwatthr
-        
-        
+
+
         sensorhistory.addwatthr(dwatthr)
+        sensorhistory.addamp(avgamp)
+        sensorhistory.addvol(120)
+        sensorhistory.addwat(avgwatt)
 
 
-        
+
+
 
 
         # Determine the minute of the hour (ie 6:42 -> '42')
         currminute = (int(time.time())/60) % 10
         #currminute = datetime.datetime.now().second
-        #print datetime.datetime.now().second
+        print str(datetime.datetime.now().second) + " - " + str(xb.address_16)
         # Figure out if its been five minutes since our last save
-        #if (((time.time() - sensorhistory.fiveminutetimer) >= 60.0) and (currminute >= 15)):
-        if (((time.time() - sensorhistory.fiveminutetimer) >= 60.0) and (currminute % 1 == 0)):
+        #if (((time.time() - sensorhistory.fiveminutetimer) >= 60.0) and (currminute >= 1)):
+        if ((time.time() - sensorhistory.fiveminutetimer) >= timeToMeasure):
             # Print out debug data, Wh used in last 5 minutes
+
             avgwattsused = sensorhistory.avgwattover5min()
-            #print time.strftime("%Y %m %d, %H:%M"),", ",sensorhistory.cumulativewatthr,"Wh = ",avgwattsused," W average"
+
+            api = apiElectro(urlDevices,urlUser,urlRecords)
+            api.postElectroRegistry(sensorhistory.avgwat(),sensorhistory.avgamp(),sensorhistory.avgvol(),str(xb.address_16),avgwattsused,str(xb.address_16))
+
+
+            print time.strftime("%Y %m %d, %H:%M"),", ",sensorhistory.cumulativewatthr,"Wh = ",avgwattsused," W average"
             print xb.address_16," , ",sensorhistory.cumulativewatthr,"Wh = ",avgwattsused," W average"
 
 
-            # Also, send it to the app engine
 
-            #appengineauth.sendreport(xb.address_16, avgwattsused)
-            
+
             # Reset our 5 minute timer
             sensorhistory.reset5mintimer()
 
 
         # We're going to twitter at midnight, 8am and 4pm
         # Determine the hour of the day (ie 6:42 -> '6')
+        '''
         currhour = datetime.datetime.now().hour
         if (((time.time() - twittertimer) >= 3660.0) and (currhour % 8 == 0)):
           #print "twittertime!"
@@ -341,11 +379,11 @@ def update_graph():
         # Redraw our pretty picture
         #fig.canvas.draw_idle()
         # Update with latest data
+        '''
 
-        wattusageline.set_ydata(avgwattdata)
 
 
-        
+
 
         '''
         voltagewatchline.set_ydata(voltagedata)
@@ -357,7 +395,7 @@ def update_graph():
         mainsampwatcher.set_ylim(maxamp * -1.2, maxamp * 1.2)
         wattusage.set_ylim(0, max(avgwattdata) * 1.2)
         '''
-        
+
 #timer = wx.Timer(wx.GetApp(), -1)
 #timer.Start(500)        # run an in every 'n' milli-seconds
 while True:

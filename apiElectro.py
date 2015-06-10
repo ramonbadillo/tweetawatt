@@ -3,27 +3,22 @@ import urllib2
 from time import gmtime, strftime
 
 
-#watts = 100
-#amp = 100
-#volts = 100
-#date = "2015-04-10T21:16:32Z"
-
-idDev = "http://electrotecnia.herokuapp.com/api/devices/"
+devUrl = ""
 data = {}
-user = "http://electrotecnia.herokuapp.com/api/users/2/"
-
+user = ""
+recordsUrl = ""
 
 class apiElectro(object):
-    
-    #idGadget = ""
-    #idDev = ""
-    #data = {}
-    
-    def __init__(self,idDev,username):
+
+
+    def __init__(self,devUrl,userUrl,recordsUrl):
         super(apiElectro, self).__init__()
-        self.idDev = idDev
-        
-        
+        self.devUrl = devUrl
+        self.user = userUrl
+        self.recordsUrl = recordsUrl
+
+
+
     def postElectroRegistry(self,watts,amp,volts,idKill,kwh,idDev):
         data['watts'] = watts
         data['kwh'] = kwh
@@ -31,19 +26,15 @@ class apiElectro(object):
         data['volts'] = volts
         data['idKill'] = idKill
         data['timeStampClient'] = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-        data['idDev'] = self.idDev + idDev + "/"
-        data['user'] = user
-        #print self.idDev + idDev + "/"
-        
-        self.postTo('http://electrotecnia.herokuapp.com/api/records/',data)
-    
+        data['idDev'] = self.devUrl + idDev + "/"
+        data['user'] = self.user
+
+        self.postTo(self.recordsUrl,data)
+
+
     def postTo(self,url,data):
-        #url = 'http://electrotecnia.herokuapp.com/api/registrys/'
+
         req = urllib2.Request(url)
         req.add_header('Content-Type','application/json')
         jdata = json.dumps(data)
         response = urllib2.urlopen(req,jdata)
-        
-#api = apiElectro("http://electrotecnia.herokuapp.com/api/gadgets/1/","http://electrotecnia.herokuapp.com/api/devices/1/")
-#api.postElectroRegistry(100,100,100)
-#print strftime("%Y-%m-%d %H:%M:%S", gmtime())
