@@ -1,10 +1,8 @@
 import json
 import urllib2 #library to POST in the API
 import os.path #library to read and delete files
-import sys
-import pickle
-from time import gmtime, strftime
 
+from time import gmtime, strftime
 from pprint import pprint
 
 
@@ -54,43 +52,47 @@ class apiElectro(object):
 
             #check if the file exists, and POST every single item in the Server
             if os.path.isfile(fname):
-                #open a file for read
-                file_object = open(fname).read()
-                #Converts the file object in a jsonObject
-                jsonFile = json.loads(file_object)
+                if os.path.isfile(fname):
+                    #open a file for read
+                    file_object = open(fname).read()
+                    #Converts the file object in a jsonObject
+                    jsonFile = json.loads(file_object)
 
-                #Iterate the json file for a single item
-                for record in jsonFile:
-                    record['realTime'] = "false" #adds the field realTime and sets on FALSE
-                    #POST the record in the Server
-                    req = urllib2.Request(url)
-                    req.add_header('Content-Type','application/json')
-                    jdata = json.dumps(record)
-                    response = urllib2.urlopen(req,jdata)
+                    #Iterate the json file for a single item
+                    for record in jsonFile:
+                        record['realTime'] = "false" #adds the field realTime and sets on FALSE
+                        #POST the record in the Server
+                        req = urllib2.Request(url)
+                        req.add_header('Content-Type','application/json')
+                        jdata = json.dumps(record)
+                        response = urllib2.urlopen(req,jdata)
 
                 #Delete the file when finish
                 os.remove(fname)
 
         #Catch the exception when the conection doesnt exists
-        except:
-            print "Error:", sys.exc_info()
+        except urllib2.URLError as e:
+            print e
 
             jsonFile = []
             if os.path.isfile(fname):
-                #open a file for read
-                file_object = open(fname).read()
-                #Converts the file object in a jsonObject
-                jsonFile = json.loads(file_object)
-                #Adds the new record to a lost Data
-            jsonFile.extend(data)
-            pprint(jsonFile)
+
+                if os.stat(fname).st_size != 0:
+                    #open a file for read
+                    file_object = open(fname).read()
+                    #Converts the file object in a jsonObject
+                    jsonFile = json.loads(file_object)
+
+
+            #Adds the new record to a lost Data
+            jsonFile.append(data)
+
             # Open a file for writing
-            out_file = open(fname,"a")
+            out_file = open(fname,"wb")
 
             # Save the dictionary into this file
             # (the 'indent=4' is optional, but makes it more readable)
-            #pickle.dump(jsonFile, out_file)
-            json.dump(data,out_file, indent=4)
+            json.dump(jsonFile,out_file, indent=4)
 
             # Close the file
             out_file.close()

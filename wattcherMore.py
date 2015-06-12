@@ -1,27 +1,25 @@
 #!/usr/bin/env python
 import serial, time, datetime, sys
 from xbee import xbee
-# for graphing stuff
-
-#import numpy as np
 
 #import api to Post to the server
 from apiElectro import apiElectro
+
 
 #for read the settings file
 import os
 import ConfigParser
 
-
+configFile = 'settings.cfg'
 ##### Read the settings file and assign to the variable
+
 configParser = ConfigParser.RawConfigParser()
-configFilePath = os.path.join(os.path.dirname(__file__), 'settings.cfg')
+configFilePath = os.path.join(os.path.dirname(__file__), configFile )
 configParser.read(configFilePath)
 
 urlWebApp = configParser.get("webAppSettings","urlWebApp")
 urlDevices  = urlWebApp + configParser.get("webAppSettings","urlDevices")
 urlRecords = urlWebApp + configParser.get("webAppSettings","urlRecords")
-
 
 username = configParser.get("userSettings","username")
 urlUser  = urlWebApp + configParser.get("userSettings","urlUser")
@@ -31,9 +29,6 @@ baudrate  = configParser.get("desktopAppSettings","baudrate")
 timeToMeasure  = int(configParser.get("desktopAppSettings","timeToMeasure"))
 
 
-
-
-#
 CURRENTSENSE = 4       # which XBee ADC has current draw data
 VOLTSENSE = 0          # which XBee ADC has mains voltage data
 MAINSVPP = 170 * 2     # +-170V is what 120Vrms ends up being (= 120*2sqrt(2))
@@ -41,7 +36,6 @@ vrefs = [492, 492, 482, 492, 501, 493, 0, 0, 0] # approx ((2.4v * (10Ko/14.7Ko))
 
 CURRENTNORM = 15.5  # conversion to amperes from ADC
 NUMWATTDATASAMPLES = 1800 # how many samples to watch in the plot window, 1 hr @ 2s samples
-
 
 
 # open up the FTDI serial port to get data transmitted to xbee
@@ -150,10 +144,15 @@ def getSettings():
     baudrate  = configParser.get("desktopAppSettings","baudrate")
     timeToMeasure  = configParser.get("desktopAppSettings","timeToMeasure")
 
+def restartReader():
+    onlywatchfor = 0
+    if (sys.argv and len(sys.argv) > 1):
+        onlywatchfor = int( sys.argv[1])
+    print onlywatchfor
+
 
 def update_graph():
     global avgwattdataidx, sensorhistories, twittertimer, onlywatchfor
-
 
     # grab one packet from the xbee, or timeout
     packet = xbee.find_packet(ser)
@@ -331,7 +330,7 @@ def update_graph():
 
         #print "\t\tWh used in last ",elapsedseconds," seconds: ",dwatthr
 
-
+        #add the data fot the avarage data
         sensorhistory.addwatthr(dwatthr)
         sensorhistory.addamp(avgamp)
         sensorhistory.addvol(120)
@@ -369,36 +368,7 @@ def update_graph():
 
         # We're going to twitter at midnight, 8am and 4pm
         # Determine the hour of the day (ie 6:42 -> '6')
-        '''
-        currhour = datetime.datetime.now().hour
-        if (((time.time() - twittertimer) >= 3660.0) and (currhour % 8 == 0)):
-          #print "twittertime!"
-          twittertimer = time.time();
-          TwitterIt(twitterusername, twitterpassword,
-                    appengineauth.gettweetreport())
-        # Redraw our pretty picture
-        #fig.canvas.draw_idle()
-        # Update with latest data
-        '''
 
-
-
-
-
-        '''
-        voltagewatchline.set_ydata(voltagedata)
-        ampwatchline.set_ydata(ampdata)
-        # Update our graphing range so that we always see all the data
-        maxamp = max(ampdata)
-        minamp = min(ampdata)
-        maxamp = max(maxamp, -minamp)
-        mainsampwatcher.set_ylim(maxamp * -1.2, maxamp * 1.2)
-        wattusage.set_ylim(0, max(avgwattdata) * 1.2)
-        '''
-
-#timer = wx.Timer(wx.GetApp(), -1)
-#timer.Start(500)        # run an in every 'n' milli-seconds
-while True:
-    update_graph()
-#wx.GetApp().Bind(wx.EVT_TIMER, update_graph)
-#plt.show()
+#Run the function
+# while True:
+#     update_graph()
