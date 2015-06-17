@@ -368,7 +368,7 @@ def update_graph():
 
         # We're going to twitter at midnight, 8am and 4pm
         # Determine the hour of the day (ie 6:42 -> '6')
-
+#branch
 #Run the function
 # while True:
 #     update_graph()
