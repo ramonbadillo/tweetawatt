@@ -373,7 +373,7 @@ def update_graph():
         # Determine the hour of the day (ie 6:42 -> '6')
 #branch
 #Run the function
-_config.fileConfig('logging.conf', defaults={'logfilename': 'sihay.log'})
+_config.fileConfig('logging.conf', defaults={'logfilename': 'watts.log'})
 logging.debug('Started')
 logging.error('new logfilename')
 # while True:
