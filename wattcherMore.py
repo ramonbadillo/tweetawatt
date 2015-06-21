@@ -9,6 +9,9 @@ from apiElectro import apiElectro
 #for read the settings file
 import os
 import ConfigParser
+import logging
+from logging import config as _config
+import httplib
 
 configFile = 'settings.cfg'
 ##### Read the settings file and assign to the variable
@@ -370,5 +373,8 @@ def update_graph():
         # Determine the hour of the day (ie 6:42 -> '6')
 #branch
 #Run the function
+_config.fileConfig('logging.conf', defaults={'logfilename': 'sihay.log'})
+logging.debug('Started')
+logging.error('new logfilename')
 # while True:
-#     update_graph()
+update_graph()

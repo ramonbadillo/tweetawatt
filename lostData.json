@@ -1,0 +1,82 @@
+[
+    {
+        "watts": -0.03920041176470588, 
+        "amp": 0.0009117647058823529, 
+        "volts": 120.0, 
+        "idKill": "2", 
+        "user": "http://electrotecnia.herokuapp.com/api/users/1/", 
+        "kwh": 0.0, 
+        "idDev": "http://electrotecnia.herokuapp.com/api/devices/2/", 
+        "timeStampClient": "2015-06-21 03:39:29"
+    }, 
+    {
+        "watts": -0.20694992156862743, 
+        "idDev": "http://electrotecnia.herokuapp.com/api/devices/2/", 
+        "kwh": -0.003756851977891934, 
+        "idKill": "2", 
+        "user": "http://electrotecnia.herokuapp.com/api/users/1/", 
+        "volts": 280.0, 
+        "amp": 0.0012156862745098039, 
+        "timeStampClient": "2015-06-21 03:39:35"
+    }, 
+    {
+        "watts": 0.2585108235294118, 
+        "amp": 0.0048627450980392155, 
+        "volts": 400.0, 
+        "idKill": "2", 
+        "user": "http://electrotecnia.herokuapp.com/api/users/1/", 
+        "kwh": 0.004709887987749399, 
+        "idDev": "http://electrotecnia.herokuapp.com/api/devices/2/", 
+        "timeStampClient": "2015-06-21 03:39:41"
+    }, 
+    {
+        "watts": 0.1530935, 
+        "idDev": "http://electrotecnia.herokuapp.com/api/devices/2/", 
+        "kwh": 0.0033987373390386814, 
+        "idKill": "2", 
+        "user": "http://electrotecnia.herokuapp.com/api/users/1/", 
+        "volts": 120.0, 
+        "amp": 0.0009117647058823529, 
+        "timeStampClient": "2015-06-21 03:41:23"
+    }, 
+    {
+        "watts": 0.15538901960784313, 
+        "amp": 0.0012156862745098039, 
+        "volts": 280.0, 
+        "idKill": "2", 
+        "user": "http://electrotecnia.herokuapp.com/api/users/1/", 
+        "kwh": 0.0028190533723616044, 
+        "idDev": "http://electrotecnia.herokuapp.com/api/devices/2/", 
+        "timeStampClient": "2015-06-21 03:41:29"
+    }, 
+    {
+        "watts": -0.16245215686274508, 
+        "idDev": "http://electrotecnia.herokuapp.com/api/devices/2/", 
+        "kwh": -0.0029281995545899107, 
+        "idKill": "2", 
+        "user": "http://electrotecnia.herokuapp.com/api/users/1/", 
+        "volts": 400.0, 
+        "amp": 0.0012156862745098039, 
+        "timeStampClient": "2015-06-21 03:41:35"
+    }, 
+    {
+        "watts": 0.0, 
+        "amp": 0.0, 
+        "volts": 520.0, 
+        "idKill": "2", 
+        "user": "http://electrotecnia.herokuapp.com/api/users/1/", 
+        "kwh": 0.0, 
+        "idDev": "http://electrotecnia.herokuapp.com/api/devices/2/", 
+        "timeStampClient": "2015-06-21 03:41:41"
+    }, 
+    {
+        "watts": 0.18152262745098036, 
+        "idDev": "http://electrotecnia.herokuapp.com/api/devices/2/", 
+        "kwh": 0.003301617961333138, 
+        "idKill": "2", 
+        "user": "http://electrotecnia.herokuapp.com/api/users/1/", 
+        "volts": 640.0, 
+        "amp": 0.0024313725490196078, 
+        "timeStampClient": "2015-06-21 03:41:47"
+    }
+]
