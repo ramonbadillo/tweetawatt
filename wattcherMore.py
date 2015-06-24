@@ -105,14 +105,14 @@ class Fiveminutehistory:
       self.fiveminutetimer = time.time()
 
   def avgwattover5min(self):
-      segundos = (time.time() - self.fiveminutetimer)
-      logging.debug("segundos watts hora = %s" , str(segundos))
+      #segundos = (time.time() - self.fiveminutetimer)
+      #logging.debug("segundos watts hora = %s" , str(segundos))
       # factor =(60.0 / segundos)
       # logging.debug("factor = %s" , str(factor))
-      # creo que ya no es necesario hacer ninguna división los watt hora ya fueron ajustados antes de sumarse
+      # creo que ya no es necesario hacer ninguna divisin los watt hora ya fueron ajustados antes de sumarse
       return self.cumulativewatthr
       # return self.cumulativewatthr * (segundos/3600)
-      # return self.cumulativewatthr * factor #(60.0 / (time.time() - self.fiveminutetimer))
+      #return self.cumulativewatthr *  (60.0 / (time.time() - self.fiveminutetimer))
 
   def avgamp(self):
       return self.cumulativeamp/self.ampN
@@ -334,28 +334,31 @@ def update_graph():
         # add up the delta-watthr used since last reading
         # Figure out how many watt hours were used since last reading
         elapsedseconds = time.time() - sensorhistory.lasttime
-        logging.debug("Antiguo segundos entre envio de xbee = %s" , str(elapsedseconds))
+        # logging.debug("Antiguo segundos entre envio de xbee = %s" , str(elapsedseconds))
         dwatthr = (avgwatt * elapsedseconds) / (60.0 * 60.0)  # 60 seconds in 60 minutes = 1 hr
-        logging.debug("Antiguo watts hora = %s" , str(dwatthr))
+        # logging.debug("Antiguo watts hora = %s" , str(dwatthr))
         sensorhistory.lasttime = time.time()
 
-        timeElapsed = 0
-        logging.debug("llaves dentro de sensorLastTime %s" , str(sensorLastTime.keys()))
-        if str(xb.address_16) in sensorLastTime:
-            tiempo = time.time()
-            timeElapsed = tiempo - sensorLastTime[str(xb.address_16)]
-            sensorLastTime[str(xb.address_16)] = tiempo
-            logging.debug("segundos entre envio de xbee = %s" , str(timeElapsed))
-        else:
-            timeElapsed = 2
-            sensorLastTime[str(xb.address_16)] = time.time()
-            logging.debug("segundos entre envio de xbee  con valor default = %s" , str(timeElapsed))
-        dwatthr = (avgwatt * timeElapsed) / (60.0 * 60.0)
-        logging.debug('%s valores killawatt 2 segundos' , "killawatt id = " +str(xb.address_16))
+        # timeElapsed = 0
+        # logging.debug("llaves dentro de sensorLastTime %s" , str(sensorLastTime.keys()))
+        # if str(xb.address_16) in sensorLastTime:
+        #     tiempo = time.time()
+        #     timeElapsed = tiempo - sensorLastTime[str(xb.address_16)]
+        #     sensorLastTime[str(xb.address_16)] = tiempo
+        #     logging.debug("segundos entre envio de xbee = %s" , str(timeElapsed))
+        # else:
+        #     timeElapsed = 2.0
+        #     sensorLastTime[str(xb.address_16)] = time.time()
+        #     logging.debug("segundos entre envio de xbee  con valor default = %s" , str(timeElapsed))
+        # dwatthr = (avgwatt * timeElapsed) / (60.0 * 60.0)
+
+
+
+        logging.debug('%s ***** valores killawatt 2 segundos' , "killawatt id = " +str(xb.address_16))
         logging.debug ('watt hora = %s' , str(dwatthr))
-        logging.debug ('amp = %s' , str(avgamp))
-        logging.debug ('vol = %s' , str(120))
-        logging.debug ('watt = %s' , str(avgwatt))
+        # logging.debug ('amp = %s' , str(avgamp))
+        # logging.debug ('vol = %s' , str(120))
+        # logging.debug ('watt = %s' , str(avgwatt))
         logging.debug ("---------------------------------")
         sensorhistory.addwatthr(dwatthr)
         sensorhistory.addamp(avgamp)
@@ -377,11 +380,11 @@ def update_graph():
             # Print out debug data, Wh used in last 5 minutes
 
             avgwattsused = sensorhistory.avgwattover5min()
-            logging.debug('%s valores listos para enviarse al servidor' , "killawatt id = " +str(xb.address_16))
+            logging.debug('%s !!!!!! valores listos para enviarse al servidor' , "killawatt id = " +str(xb.address_16))
             logging.debug ('avg watt hora = %s' , str(avgwattsused))
-            logging.debug ('avg amp = %s' , str(sensorhistory.avgwat()))
-            logging.debug ('avg vol = %s' , str(sensorhistory.avgvol()))
-            logging.debug ('avg watt = %s' , str(sensorhistory.avgwat()))
+            # logging.debug ('avg amp = %s' , str(sensorhistory.avgwat()))
+            # logging.debug ('avg vol = %s' , str(sensorhistory.avgvol()))
+            # logging.debug ('avg watt = %s' , str(sensorhistory.avgwat()))
             logging.debug ("---------------------------------")
 
             api = apiElectro(urlDevices,urlUser,urlRecords)
@@ -397,12 +400,7 @@ def update_graph():
             # Reset our 5 minute timer
             sensorhistory.reset5mintimer()
 
-            logging.debug('%s valores reseteados' , "killawatt id = " +str(xb.address_16))
-            logging.debug ('cumulative watt hora = %s' , str(sensorhistory.cumulativewatthr))
-            logging.debug ('cumulative amp = %s' , str(sensorhistory.cumulativeamp))
-            logging.debug ('cumulative vol = %s' , str(sensorhistory.cumulativevol))
-            logging.debug ('cumulative watt = %s' , str(sensorhistory.cumulativewat))
-            logging.debug ("---------------------------------")
+
 
 
         # We're going to twitter at midnight, 8am and 4pm
