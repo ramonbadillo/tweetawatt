@@ -13,6 +13,9 @@ import logging
 from logging import config as _config
 import httplib
 
+_config.fileConfig('logging.conf', defaults={'logfilename': 'watts.log'})
+logging.debug('Started')
+logging.error('new logfilename')
 configFile = 'settings.cfg'
 ##### Read the settings file and assign to the variable
 
@@ -93,7 +96,7 @@ class Fiveminutehistory:
   def reset5mintimer(self):
       self.cumulativewatthr = 0
       self.cumulativeamp = 0
-      self.cumulaticevol = 0
+      self.cumulativevol = 0
       self.cumulativewat = 0
       self.ampN = 0
       self.volN = 0
@@ -102,7 +105,15 @@ class Fiveminutehistory:
       self.fiveminutetimer = time.time()
 
   def avgwattover5min(self):
-      return self.cumulativewatthr * (60.0 / (time.time() - self.fiveminutetimer))
+      segundos = (time.time() - self.fiveminutetimer)
+      logging.debug("segundos watts hora = %s" , str(segundos))
+      # factor =(60.0 / segundos)
+      # logging.debug("factor = %s" , str(factor))
+      # creo que ya no es necesario hacer ninguna división los watt hora ya fueron ajustados antes de sumarse
+      return self.cumulativewatthr
+      # return self.cumulativewatthr * (segundos/3600)
+      # return self.cumulativewatthr * factor #(60.0 / (time.time() - self.fiveminutetimer))
+
   def avgamp(self):
       return self.cumulativeamp/self.ampN
   def avgvol(self):
@@ -118,6 +129,7 @@ class Fiveminutehistory:
 
 ####### array of histories
 sensorhistories = []
+sensorLastTime ={}
 
 ####### retriever
 def findsensorhistory(sensornum):
@@ -322,18 +334,29 @@ def update_graph():
         # add up the delta-watthr used since last reading
         # Figure out how many watt hours were used since last reading
         elapsedseconds = time.time() - sensorhistory.lasttime
+        logging.debug("Antiguo segundos entre envio de xbee = %s" , str(elapsedseconds))
         dwatthr = (avgwatt * elapsedseconds) / (60.0 * 60.0)  # 60 seconds in 60 minutes = 1 hr
+        logging.debug("Antiguo watts hora = %s" , str(dwatthr))
         sensorhistory.lasttime = time.time()
 
-        #api = apiElectro("http://electrotecnia.herokuapp.com/api/devices/","admin")
-        #api.postElectroRegistry(avgwatt,avgamp,100,str(xb.address_16),"{0:.4f}".format(dwatthr),str(xb.address_16))
-
-
-
-
-        #print "\t\tWh used in last ",elapsedseconds," seconds: ",dwatthr
-
-        #add the data fot the avarage data
+        timeElapsed = 0
+        logging.debug("llaves dentro de sensorLastTime %s" , str(sensorLastTime.keys()))
+        if str(xb.address_16) in sensorLastTime:
+            tiempo = time.time()
+            timeElapsed = tiempo - sensorLastTime[str(xb.address_16)]
+            sensorLastTime[str(xb.address_16)] = tiempo
+            logging.debug("segundos entre envio de xbee = %s" , str(timeElapsed))
+        else:
+            timeElapsed = 2
+            sensorLastTime[str(xb.address_16)] = time.time()
+            logging.debug("segundos entre envio de xbee  con valor default = %s" , str(timeElapsed))
+        dwatthr = (avgwatt * timeElapsed) / (60.0 * 60.0)
+        logging.debug('%s valores killawatt 2 segundos' , "killawatt id = " +str(xb.address_16))
+        logging.debug ('watt hora = %s' , str(dwatthr))
+        logging.debug ('amp = %s' , str(avgamp))
+        logging.debug ('vol = %s' , str(120))
+        logging.debug ('watt = %s' , str(avgwatt))
+        logging.debug ("---------------------------------")
         sensorhistory.addwatthr(dwatthr)
         sensorhistory.addamp(avgamp)
         sensorhistory.addvol(120)
@@ -347,13 +370,19 @@ def update_graph():
         # Determine the minute of the hour (ie 6:42 -> '42')
         currminute = (int(time.time())/60) % 10
         #currminute = datetime.datetime.now().second
-        print str(datetime.datetime.now().second) + " - " + str(xb.address_16)
+        # print str(datetime.datetime.now().second) + " - " + str(xb.address_16)
         # Figure out if its been five minutes since our last save
         #if (((time.time() - sensorhistory.fiveminutetimer) >= 60.0) and (currminute >= 1)):
         if ((time.time() - sensorhistory.fiveminutetimer) >= timeToMeasure):
             # Print out debug data, Wh used in last 5 minutes
 
             avgwattsused = sensorhistory.avgwattover5min()
+            logging.debug('%s valores listos para enviarse al servidor' , "killawatt id = " +str(xb.address_16))
+            logging.debug ('avg watt hora = %s' , str(avgwattsused))
+            logging.debug ('avg amp = %s' , str(sensorhistory.avgwat()))
+            logging.debug ('avg vol = %s' , str(sensorhistory.avgvol()))
+            logging.debug ('avg watt = %s' , str(sensorhistory.avgwat()))
+            logging.debug ("---------------------------------")
 
             api = apiElectro(urlDevices,urlUser,urlRecords)
             api.postElectroRegistry(sensorhistory.avgwat(),sensorhistory.avgamp(),sensorhistory.avgvol(),str(xb.address_16),avgwattsused,str(xb.address_16))
@@ -368,13 +397,17 @@ def update_graph():
             # Reset our 5 minute timer
             sensorhistory.reset5mintimer()
 
+            logging.debug('%s valores reseteados' , "killawatt id = " +str(xb.address_16))
+            logging.debug ('cumulative watt hora = %s' , str(sensorhistory.cumulativewatthr))
+            logging.debug ('cumulative amp = %s' , str(sensorhistory.cumulativeamp))
+            logging.debug ('cumulative vol = %s' , str(sensorhistory.cumulativevol))
+            logging.debug ('cumulative watt = %s' , str(sensorhistory.cumulativewat))
+            logging.debug ("---------------------------------")
+
 
         # We're going to twitter at midnight, 8am and 4pm
         # Determine the hour of the day (ie 6:42 -> '6')
 #branch
 #Run the function
-_config.fileConfig('logging.conf', defaults={'logfilename': 'watts.log'})
-logging.debug('Started')
-logging.error('new logfilename')
-# while True:
-update_graph()
+while True:
+    update_graph()
