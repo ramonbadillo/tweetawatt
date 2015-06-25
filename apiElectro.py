@@ -1,7 +1,7 @@
 import json
 import urllib2 #library to POST in the API
 import os.path #library to read and delete files
-
+import httplib
 from time import gmtime, strftime
 from pprint import pprint
 
@@ -71,7 +71,7 @@ class apiElectro(object):
                 os.remove(fname)
 
         #Catch the exception when the conection doesnt exists
-        except urllib2.URLError as e:
+        except  (urllib2.URLError, httplib.HTTPException) as e:
             print e
 
             jsonFile = []
