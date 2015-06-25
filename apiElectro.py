@@ -3,8 +3,7 @@ import urllib2 #library to POST in the API
 import os.path #library to read and delete files
 import httplib
 from time import gmtime, strftime
-from pprint import pprint
-
+import logging
 
 
 devUrl = ""
@@ -43,11 +42,13 @@ class apiElectro(object):
     def postTo(self,url,data):
         #try to POST in the server
         try:
+            logging.debug('Inicia el posteo al servidor')
 
             req = urllib2.Request(url)
             req.add_header('Content-Type','application/json')
             jdata = json.dumps(data)
             response = urllib2.urlopen(req,jdata)
+            logging.debug('finalizo el posteo del valor estandar el posteo al servidor')
 
 
             #check if the file exists, and POST every single item in the Server

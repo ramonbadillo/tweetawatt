@@ -15,7 +15,6 @@ import httplib
 
 _config.fileConfig('logging.conf', defaults={'logfilename': 'watts.log'})
 logging.debug('Started')
-logging.error('new logfilename')
 configFile = 'settings.cfg'
 ##### Read the settings file and assign to the variable
 
@@ -105,14 +104,7 @@ class Fiveminutehistory:
       self.fiveminutetimer = time.time()
 
   def avgwattover5min(self):
-      #segundos = (time.time() - self.fiveminutetimer)
-      #logging.debug("segundos watts hora = %s" , str(segundos))
-      # factor =(60.0 / segundos)
-      # logging.debug("factor = %s" , str(factor))
-      # creo que ya no es necesario hacer ninguna divisin los watt hora ya fueron ajustados antes de sumarse
       return self.cumulativewatthr
-      # return self.cumulativewatthr * (segundos/3600)
-      #return self.cumulativewatthr *  (60.0 / (time.time() - self.fiveminutetimer))
 
   def avgamp(self):
       return self.cumulativeamp/self.ampN
@@ -171,6 +163,7 @@ def update_graph():
 
     # grab one packet from the xbee, or timeout
     packet = xbee.find_packet(ser)
+    logging.debug('Se ha leido un nuevo paquete del xbee')
     if packet:
         xb = xbee(packet)
         #print xb.address_16
@@ -178,6 +171,7 @@ def update_graph():
             if (xb.address_16 != onlywatchfor):
                 return
             #print xb
+        logging.debug('llego un paquete del killwatt numero : %s' , str(xb.address_16))
 
         # we'll only store n-1 samples since the first one is usually messed up
         voltagedata = [-1] * (len(xb.analog_samples) - 1)
@@ -282,39 +276,6 @@ def update_graph():
         #comentado por pablo    avgwatt += abs(wattdata[i])
         avgwatt /= 17.0
 
-
-
-
-        '''
-        avgvoltp = 0
-        print avgv /= 17.0 , ""
-        for i in range(17):
-            avgvoltp += (voltagedataPablo[i])
-        #print "sumatoria volt = " + str(avgvoltp)
-
-
-
-        avgvoltp /= 17.0
-        #avgvoltp = avgvoltp**(.5)
-        print  "average voltage Pablo" + str(avgvoltp)
-        '''
-
-
-        # Print out our most recent measurements
-        #print xb.xbeeID
-        #print voltaje
-        #if xb.address_16 is 1:
-
-        #print str(xb.address_16)+"\tCurrent draw, in amperes: "+str(avgamp)
-
-        #print "\tWatt draw, in VA: "+str(avgwatt)
-            #print voltagedata
-
-
-
-        ##print api = apiElectro("http://electrotecnia.herokuapp.com/api/gadgets/"+str(xb.xbeeID)+"/","http://electrotecnia.herokuapp.com/api/devices/1/")
-        ##api.postElectroRegistry(avgwatt,avgamp,100)
-
         # Add the current watt usage to our graph history
         avgwattdata[avgwattdataidx] = avgwatt
         avgwattdataidx += 1
@@ -326,6 +287,7 @@ def update_graph():
             for i in range(len(avgwattdata) - tenpercent, len(avgwattdata)):
                 avgwattdata[i] = 0
             avgwattdataidx = len(avgwattdata) - tenpercent
+        logging.debug('fin del procesamiento de paquete del killwatt numero : %s' , str(xb.address_16))
 
         # retreive the history for this sensor
         sensorhistory = findsensorhistory(xb.address_16)
@@ -338,73 +300,36 @@ def update_graph():
         dwatthr = (avgwatt * elapsedseconds) / (60.0 * 60.0)  # 60 seconds in 60 minutes = 1 hr
         # logging.debug("Antiguo watts hora = %s" , str(dwatthr))
         sensorhistory.lasttime = time.time()
-
-        # timeElapsed = 0
-        # logging.debug("llaves dentro de sensorLastTime %s" , str(sensorLastTime.keys()))
-        # if str(xb.address_16) in sensorLastTime:
-        #     tiempo = time.time()
-        #     timeElapsed = tiempo - sensorLastTime[str(xb.address_16)]
-        #     sensorLastTime[str(xb.address_16)] = tiempo
-        #     logging.debug("segundos entre envio de xbee = %s" , str(timeElapsed))
-        # else:
-        #     timeElapsed = 2.0
-        #     sensorLastTime[str(xb.address_16)] = time.time()
-        #     logging.debug("segundos entre envio de xbee  con valor default = %s" , str(timeElapsed))
-        # dwatthr = (avgwatt * timeElapsed) / (60.0 * 60.0)
-
-
-
         logging.debug('%s ***** valores killawatt 2 segundos' , "killawatt id = " +str(xb.address_16))
         logging.debug ('watt hora = %s' , str(dwatthr))
-        # logging.debug ('amp = %s' , str(avgamp))
-        # logging.debug ('vol = %s' , str(120))
-        # logging.debug ('watt = %s' , str(avgwatt))
+        logging.debug ('amp = %s' , str(avgamp))
+        logging.debug ('vol = %s' , str(120))
+        logging.debug ('watt = %s' , str(avgwatt))
         logging.debug ("---------------------------------")
         sensorhistory.addwatthr(dwatthr)
         sensorhistory.addamp(avgamp)
         sensorhistory.addvol(120)
         sensorhistory.addwat(avgwatt)
 
-
-
-
-
-
-        # Determine the minute of the hour (ie 6:42 -> '42')
         currminute = (int(time.time())/60) % 10
-        #currminute = datetime.datetime.now().second
-        # print str(datetime.datetime.now().second) + " - " + str(xb.address_16)
-        # Figure out if its been five minutes since our last save
-        #if (((time.time() - sensorhistory.fiveminutetimer) >= 60.0) and (currminute >= 1)):
         if ((time.time() - sensorhistory.fiveminutetimer) >= timeToMeasure):
             # Print out debug data, Wh used in last 5 minutes
-
             avgwattsused = sensorhistory.avgwattover5min()
             logging.debug('%s !!!!!! valores listos para enviarse al servidor' , "killawatt id = " +str(xb.address_16))
             logging.debug ('avg watt hora = %s' , str(avgwattsused))
-            # logging.debug ('avg amp = %s' , str(sensorhistory.avgwat()))
-            # logging.debug ('avg vol = %s' , str(sensorhistory.avgvol()))
-            # logging.debug ('avg watt = %s' , str(sensorhistory.avgwat()))
+            logging.debug ('avg amp = %s' , str(sensorhistory.avgwat()))
+            logging.debug ('avg vol = %s' , str(sensorhistory.avgvol()))
+            logging.debug ('avg watt = %s' , str(sensorhistory.avgwat()))
             logging.debug ("---------------------------------")
-
             api = apiElectro(urlDevices,urlUser,urlRecords)
             api.postElectroRegistry(sensorhistory.avgwat(),sensorhistory.avgamp(),sensorhistory.avgvol(),str(xb.address_16),avgwattsused,str(xb.address_16))
-
-
             print time.strftime("%Y %m %d, %H:%M"),", ",sensorhistory.cumulativewatthr,"Wh = ",avgwattsused," W average"
             print xb.address_16," , ",sensorhistory.cumulativewatthr,"Wh = ",avgwattsused," W average"
-
-
-
 
             # Reset our 5 minute timer
             sensorhistory.reset5mintimer()
 
 
-
-
-        # We're going to twitter at midnight, 8am and 4pm
-        # Determine the hour of the day (ie 6:42 -> '6')
 #branch
 #Run the function
 while True:
