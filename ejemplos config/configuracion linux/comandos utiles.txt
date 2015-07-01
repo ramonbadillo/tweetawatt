@@ -1,0 +1,3 @@
+Plug in a FTDI based design/module/cable
+Open a terminal window, and enter
+dmesg | grep FTDI 
