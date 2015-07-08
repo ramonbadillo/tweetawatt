@@ -1,0 +1,10 @@
+Descarga de ubuntu linux
+
+https://ubuntu-mate.org/armhf-rootfs/
+
+Problemas de cambiar resolución
+
+https://www.raspberrypi.org/forums/viewtopic.php?f=56&t=105345
+http://elinux.org/RPiconfig
+http://elinux.org/R-Pi_configuration_file
+https://www.raspberrypi.org/documentation/configuration/config-txt.md

@@ -1,0 +1,3 @@
+sudo apt-get install python-pip
+sudo apt-get install python-dev
+pip install pyserial
