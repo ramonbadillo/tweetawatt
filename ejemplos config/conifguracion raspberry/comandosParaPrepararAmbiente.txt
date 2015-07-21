@@ -1,3 +1,18 @@
 sudo apt-get install python-pip
 sudo apt-get install python-dev
 pip install pyserial
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Esto sirve para encontrar el nombre del xbee en ubuntu, no hacen falta drivers en el ubuntu mate que usé
+
+Plug in a FTDI based design/module/cable
+Open a terminal window, and enter
+dmesg | grep FTDI 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+para poder leer los datos del xbee hacen falta permisos de sudo ejecutar así :
+
+sudo python wattcherMore.py
+
++++++++++++++++++++++++++++++++++++++++
