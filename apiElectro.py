@@ -4,6 +4,9 @@ import os.path #library to read and delete files
 import httplib
 from time import gmtime, strftime
 import logging
+from socket import error as SocketError
+from datetime import datetime
+from pytz import timezone
 
 
 devUrl = ""
@@ -31,7 +34,8 @@ class apiElectro(object):
         data['amp'] = amp
         data['volts'] = volts
         data['idKill'] = idKill
-        data['timeStampClient'] = strftime("%Y-%m-%d %H:%M:%S", gmtime()) #takes the time of the client and format to post in the API
+        data['timeStampClient'] = strftime("%Y-%m-%dT%H:%M:%SZ", gmtime()) #takes the time of the client and format to post in the API
+        logging.debug("timeStamp enviado al servidor %s ", data['timeStampClient'] )
         data['idDev'] = self.devUrl + idDev + "/"
         data['user'] = self.user
 
@@ -78,7 +82,7 @@ class apiElectro(object):
                 logging.debug('El archivo de datos perdidos ha sido borrado')
 
         #Catch the exception when the conection doesnt exists
-        except  (urllib2.URLError, httplib.HTTPException) as e:
+        except  (urllib2.URLError, httplib.HTTPException, SocketError) as e:
             logging.error('error al postear al servidor, %s',str(e))
 
             jsonFile = []
