@@ -2,7 +2,7 @@ Descarga de ubuntu linux
 
 https://ubuntu-mate.org/armhf-rootfs/
 
-Problemas de cambiar resolución
+Problemas de cambiar resolución consulte las siguientes ligas
 
 https://www.raspberrypi.org/forums/viewtopic.php?f=56&t=105345
 http://elinux.org/RPiconfig

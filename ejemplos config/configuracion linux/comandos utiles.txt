@@ -1,9 +1,10 @@
-Esto sirve para encontrar el nombre del xbee en ubuntu, no hacen falta drivers en el ubuntu que usé
+Esto sirve para encontrar el nombre del xbee en ubuntu, no hacen falta drivers en la versión de ubuntu que usé
 
-Plug in a FTDI based design/module/cable
-Open a terminal window, and enter
-dmesg | grep FTDI 
-
+1 Conectar el xbee a un puerto USB
+2 Abrir una terminal de comandos
+3 Ejecutar el siguiente comando
+    dmesg | grep FTDI
+4 Analizar texto y buscar el nombre que se parezca al valor de el archivo de settings incluido en este directorio.
 ——————————————————————————————————————
 
 para poder leer los datos del xbee hacen falta permisos de sudo ejecutar así :

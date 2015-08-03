@@ -1,0 +1,4 @@
+Para encontrar el nombre del xbee en windows basta con conectarlo por usb esperar a que se auto configure el nuevo dispositivo
+y revisar el administrador de dispositivos y buscar en los puertos seriales com, el nombre generalmente es com3 o com4.
+
+Postdata: si es windows xp hace falta instalar primero el driver que vienen en el directorio de drivers.

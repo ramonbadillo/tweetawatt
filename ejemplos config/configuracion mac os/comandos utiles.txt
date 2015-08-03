@@ -1,1 +1,3 @@
+Ejecutar este comando en una terminal de comandos para averiguar el nombre del xbee que se va a usar
+en el archivo de configuracion
 ls /dev/{tty,cu}.u*

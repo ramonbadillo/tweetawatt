@@ -1,13 +1,19 @@
+La version de ubuntu mate para raspberry pi2 no tiene todos los componentes de python que requerimos para correr la app
+
+Ejecutar estos comandos antes de intentar ejecutar la aplicación
+
 sudo apt-get install python-pip
 sudo apt-get install python-dev
 pip install pyserial
 
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-Esto sirve para encontrar el nombre del xbee en ubuntu, no hacen falta drivers en el ubuntu mate que usé
+Esto sirve para encontrar el nombre del xbee en ubuntu, no hacen falta drivers en la versión de ubuntu que usé
 
-Plug in a FTDI based design/module/cable
-Open a terminal window, and enter
-dmesg | grep FTDI 
+1 Conectar el xbee a un puerto USB
+2 Abrir una terminal de comandos
+3 Ejecutar el siguiente comando
+    dmesg | grep FTDI
+4 Analizar texto y buscar el nombre que se parezca al valor de el archivo de settings incluido en este directorio.
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
