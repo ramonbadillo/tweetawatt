@@ -166,11 +166,9 @@ def update_graph():
     logging.debug('Se ha leido un nuevo paquete del xbee')
     if packet:
         xb = xbee(packet)
-        #print xb.address_16
         if (onlywatchfor != 0):
             if (xb.address_16 != onlywatchfor):
                 return
-            #print xb
         logging.debug('llego un paquete del killwatt numero : %s' , str(xb.address_16))
 
         # we'll only store n-1 samples since the first one is usually messed up
@@ -182,7 +180,6 @@ def update_graph():
             voltagedata[i] = xb.analog_samples[i+1][VOLTSENSE]
             ampdata[i] = xb.analog_samples[i+1][CURRENTSENSE]
 
-        #print ampdata
 
         # get max and min voltage and normalize the curve to '0'
         # to make the graph 'AC coupled' / signed
@@ -193,30 +190,18 @@ def update_graph():
         voltagedataPablo = voltagedata[:]
         max_v_p = max(voltagedataPablo)
         min_v_p = min(voltagedataPablo)
-        #print "maximo voltage " + str(max_v_p)
-        #print "mini voltage " + str(min_v_p)
         valor_int_p = ((max_v_p - min_v_p) / 2) + min_v_p
-        #print "valor intp " + str(valor_int_p)
         for i in range(len(voltagedataPablo)):
-            #print str(i) + "-------------" + str(i)
+            #en la siguiente linea aparece el factor de ajuste proporcionado por expertos de la uaz
             voltagedataPablo[i] = (voltagedataPablo[i] - valor_int_p) * 0.581
-            #print "voltage antes de elevar " + str(voltagedataPablo[i])
-            #voltagedataPablo[i] = voltagedataPablo[i]**(2)
-            #print "voltage despues de elevar " + str(voltagedataPablo[i])
 
         corrientedataPablo = ampdata[:]
         max_c_p = max(corrientedataPablo)
         min_c_p = min(corrientedataPablo)
-        #print "maximo voltage " + str(max_v_p)
-        #print "mini voltage " + str(min_v_p)
         valor_intCorriente_p = ((max_c_p - min_c_p) / 2) + min_c_p
-        #print "valor intp " + str(valor_int_p)
         for i in range(len(corrientedataPablo)):
-            #print str(i) + "-------------" + str(i)
+            #en la siguiente linea aparece el factor de ajuste proporcionado por expertos de la uaz
             corrientedataPablo[i] = (corrientedataPablo[i] - valor_intCorriente_p) * 0.062
-            #print "voltage antes de elevar " + str(voltagedataPablo[i])
-            #voltagedataPablo[i] = voltagedataPablo[i]**(2)
-            #print "voltage despues de elevar " + str(voltagedataPablo[i])
 
 
 
@@ -250,21 +235,17 @@ def update_graph():
             # that converts the ADC reading to Amperes
             ampdata[i] /= CURRENTNORM
 
-        #print "Voltage, in volts: ", voltagedata
-        #print "Current, in amps:  ", ampdata
 
         # calculate instant. watts, by multiplying V*I for each sample point
         wattdata = [0] * len(voltagedata)
         for i in range(len(wattdata)):
             wattdata[i] = voltagedataPablo[i] * corrientedataPablo[i]
-        # comentado por pablo    wattdata[i] = voltagedata[i] * ampdata[i]
 
         # sum up the current drawn over one 1/60hz cycle
         avgamp = 0
         # 16.6 samples per second, one cycle = ~17 samples
         # close enough for govt work :(
         for i in range(17):
-            #avgamp += abs(ampdata[i])
             avgamp += corrientedataPablo[i]
         avgamp /= 17.0
 
@@ -273,7 +254,6 @@ def update_graph():
         # 16.6 samples per second, one cycle = ~17 samples
         for i in range(17):
             avgwatt += (wattdata[i])
-        #comentado por pablo    avgwatt += abs(wattdata[i])
         avgwatt /= 17.0
 
         # Add the current watt usage to our graph history
