@@ -5,8 +5,6 @@ import httplib
 from time import gmtime, strftime
 import logging
 from socket import error as SocketError
-from datetime import datetime
-from pytz import timezone
 
 
 devUrl = ""
@@ -56,7 +54,8 @@ class apiElectro(object):
 
 
             #check if the file exists, and POST every single item in the Server
-            if os.path.isfile(fname):
+            if os.path.isfiemery
+                le(fname):
                 logging.debug('Inicia la busqueda del archivo de datos perdidos')
                 if os.path.isfile(fname):
                     #open a file for read
