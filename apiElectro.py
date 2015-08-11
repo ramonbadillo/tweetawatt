@@ -7,6 +7,7 @@ import logging
 from socket import error as SocketError
 
 
+
 devUrl = ""
 data = {}
 user = ""
@@ -54,8 +55,7 @@ class apiElectro(object):
 
 
             #check if the file exists, and POST every single item in the Server
-            if os.path.isfiemery
-                le(fname):
+            if os.path.isfile(fname):
                 logging.debug('Inicia la busqueda del archivo de datos perdidos')
                 if os.path.isfile(fname):
                     #open a file for read
